@@ -17,3 +17,9 @@ TOP-LEVEL:
 14. Better Vector math(normalisation, +=, commonly used vector constants, swizzling support)
 15. Options class/system, some place to read values that the player chooses
 16. Centralised "level" or "scene" class that holds the data that the game is using
+17. Game object class
+18. Make naming consistent
+	(a) Vector swizzling
+
+19. Eventually make easier way to generate Mesh
+20. Eventually make easier way of generating texture coordinates

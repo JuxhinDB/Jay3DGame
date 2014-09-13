@@ -6,6 +6,7 @@ import org.jay3d.engine.render.*;
 import org.jay3d.engine.render.material.Material;
 import org.jay3d.engine.render.shaders.BasicShader;
 import org.jay3d.engine.render.shaders.Shader;
+import org.jay3d.gamedemo.objects.Door;
 import org.jay3d.util.Util;
 
 import java.util.ArrayList;
@@ -29,12 +30,19 @@ public class Level {
     private Mesh mesh;
     private Transform transform;
 
+    //WARNING: TEMPORARY VAR
+    private Door door;
+
     public Level(String levelName, String textureName) {
+        Transform tempTransform = new Transform();
+        tempTransform.setTranslation(new Vector3f(6f, 0 ,8.5f));
+        material = new Material(new Texture(textureName));
+
+        door = new Door(tempTransform, material);
         level = new Bitmap(levelName).flipY();
 
         shader = BasicShader.getInstance();
 
-        material = new Material(new Texture(textureName));
         transform = new Transform();
 
         generateLevel();
@@ -45,7 +53,7 @@ public class Level {
     }
 
     public void update() {
-
+        door.update();
     }
 
     public void render() {
@@ -53,6 +61,7 @@ public class Level {
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(),
                 material);
         mesh.draw();
+        door.render();
     }
 
     private void addFace(ArrayList<Integer> indices, int startLocation, boolean direction) {
@@ -202,6 +211,12 @@ public class Level {
                     }
                 }
             }
+
+            Vector2f doorSize = new Vector2f(Door.LENGTH, Door.WIDTH);
+            Vector3f doorPos3f = door.getTransform().getTranslation();
+            Vector2f doorPos2f = new Vector2f(doorPos3f.getX(), doorPos3f.getZ());
+            collisionVector = collisionVector.mul(rectCollide(oldPos2, newPos2, objectSize,
+                    doorPos2f, doorSize));
         }
 
         return new Vector3f(collisionVector.getX(), 0, collisionVector.getY());
@@ -226,5 +241,9 @@ public class Level {
         }
 
         return res;
+    }
+
+    public Shader getShader() {
+        return shader;
     }
 }
