@@ -19,7 +19,9 @@ TOP-LEVEL:
 16. Centralised "level" or "scene" class that holds the data that the game is using
 17. Game object class
 18. Make naming consistent
-	(a) Vector swizzling
-
 19. Eventually make easier way to generate Mesh
 20. Eventually make easier way of generating texture coordinates
+21. Add vector swizzling
+22. Make time seconds instead of nanoseconds
+23. Give vectors a copy constructor
+24. Give vectors an interpolation method
