@@ -18,6 +18,7 @@ public class Camera
     {
         this(new Vector3f(0,0,0), new Vector3f(0,0,1), new Vector3f(0,1,0));
     }
+
     public Camera(Vector3f pos, Vector3f forward, Vector3f up)
     {
         this.pos = pos;
