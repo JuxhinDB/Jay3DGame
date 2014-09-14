@@ -25,3 +25,4 @@ TOP-LEVEL:
 22. Make time seconds instead of nanoseconds
 23. Give vectors a copy constructor
 24. Give vectors an interpolation method
+25. Transparency support

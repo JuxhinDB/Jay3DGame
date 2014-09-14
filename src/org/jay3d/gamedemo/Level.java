@@ -7,6 +7,7 @@ import org.jay3d.engine.render.*;
 import org.jay3d.engine.render.material.Material;
 import org.jay3d.engine.render.shaders.BasicShader;
 import org.jay3d.engine.render.shaders.Shader;
+import org.jay3d.gamedemo.enemies.Enemy;
 import org.jay3d.gamedemo.objects.Door;
 import org.jay3d.util.Util;
 
@@ -36,6 +37,7 @@ public class Level {
 
 
     //WARNING: TEMPORARY VAR
+    private Enemy enemy;
     private ArrayList<Door> doors;
 
     public Level(String levelName, String textureName, Player player) {
@@ -51,6 +53,8 @@ public class Level {
         shader = BasicShader.getInstance();
 
         transform = new Transform();
+
+        enemy = new Enemy(tempTransform);
 
         generateLevel();
     }
@@ -69,6 +73,7 @@ public class Level {
         for(Door d : doors)
             d.update();
         player.update();
+        enemy.update();
     }
 
     public void render() {
@@ -79,6 +84,7 @@ public class Level {
         for(Door d : doors)
             d.render();
         player.render();
+        enemy.render();
     }
 
     private void addFace(ArrayList<Integer> indices, int startLocation, boolean direction) {
