@@ -59,13 +59,18 @@ public class Level {
         generateLevel();
     }
 
+    public void openDoors(Vector3f pos){
+        for(Door d : doors){
+            if(d.getTransform().getTranslation().sub(pos).length() < OPEN_DISTANCE){
+                d.open();
+            }
+        }
+    }
+
     public void input() {
         if(Input.getKeyDown(Input.KEY_E))
-            for(Door d : doors){
-                if(d.getTransform().getTranslation().sub(player.getCamera().getPos()).length() < OPEN_DISTANCE){
-                    d.open();
-                }
-            }
+           openDoors(player.getCamera().getPos());
+
         player.input();
     }
 
