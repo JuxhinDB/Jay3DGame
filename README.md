@@ -1,7 +1,7 @@
 Jay3DGame
 =========
 
-><p>This is mainly a side-project(mainly to test the current strength of my engine) that is based off my engine's latest
+><p>This is mainly a side-project(to test the current strength of my engine) that is based off my engine's latest
 >commit(Commit #57) if you wish to review it at the point in time. </p>
 
 ><p>The engine itself won't be touched in any way(or maybe some minor reworks here and there), therefore anything I need to add
@@ -30,3 +30,16 @@ Things to add to the engine:
 19. Eventually make easier way to generate Mesh
 20. Eventually make easier way of generating texture coordinates
 21. Vector swizzling
+22. Make time seconds instead of nanoseconds
+23. Give vectors a copy constructor
+24. Give vectors an interpolation method
+25. Transparency support
+26. Sprite support
+27. Good way to compare vectors
+28. Vector2f crossproduct method29. 
+29. Some way to actually display text(UI)
+
+
+Notes:
+-------
+Was relatively fun yet very tedious to code the game. I basically said a big ?#@! you to OO design and have not refactored much code(to stick to the idea of not altering my engine). However it DEFINITELY helped pinpoint the weaknesses of my engine(as of commit #57 in Jay3D public repository)
