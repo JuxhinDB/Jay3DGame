@@ -29,4 +29,5 @@ TOP-LEVEL:
 25. Transparency support
 26. Sprite support
 27. Good way to compare vectors
-28. Vector2f crossproduct method
+28. Vector2f crossproduct method29. 
+29. Some way to actually display text(UI)

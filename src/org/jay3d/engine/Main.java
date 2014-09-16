@@ -17,41 +17,54 @@ public class Main{
         isRunning = false;
         game = new Game();
     }
-    public void start() {
+    public void start(){
         if(isRunning)
             return;
         run();
     }
-    public void stop() {
+
+    public void stop(){
         if(!isRunning)
             return;
         isRunning = false;
     }
-    private void run() {
+
+    private void run(){
         isRunning = true;
+
         int frames = 0;
         long frameCounter = 0;
+
         final double frameTime = 1.0 / FRAME_CAP;
+
         long lastTime = Time.getTime();
         double unprocessedTime = 0;
+
         while(isRunning) {
             boolean render = false;
+
             long startTime = Time.getTime();
             long passedTime = startTime - lastTime;
             lastTime = startTime;
-            unprocessedTime += passedTime / (double)Time.SECOND;
+
+            unprocessedTime += ((double)passedTime / (double)Time.SECOND);
             frameCounter += passedTime;
+
             while(unprocessedTime > frameTime) {
                 render = true;
+
                 unprocessedTime -= frameTime;
+
                 if(Window.isCloseRequested())
                     stop();
+
                 Time.setDelta(frameTime);
+
                 game.input();
                 Input.update();
                 game.update();
+
                 if(frameCounter >= Time.SECOND) {
-            //System.out.println(frames);
                     frames = 0;
                     frameCounter = 0;
                 }
@@ -79,6 +92,7 @@ public class Main{
     private void cleanUp() {
         Window.dispose();
     }
+
     public static void main(String[] args) {
         Window.createWindow(WIDTH, HEIGHT, TITLE);
         Main game = new Main();

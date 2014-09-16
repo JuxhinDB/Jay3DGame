@@ -48,6 +48,10 @@ public class Enemy {
     public static final float SHOT_ANGLE = 10f;
     public static final float ATTACK_CHANCE = 0.5f;
     public static final int MAX_HEALTH = 100;
+
+    public static final int DAMAGE_MIN = 15;
+    public static final int DAMAGE_MAX = 30;
+
     private boolean canLook;
     private boolean canAttack;
 
@@ -99,6 +103,7 @@ public class Enemy {
     {
         double time = ((double)Time.getTime())/((double)Time.SECOND);
         double timeDecimals = time - (double)((int)time);
+
         if(timeDecimals < 0.5){
             canLook = true;
         }else if(canLook){
@@ -145,6 +150,7 @@ public class Enemy {
     private void attackUpdate(Vector3f orientation, float distance){
         double time = ((double)Time.getTime())/((double)Time.SECOND);
         double timeDecimals = time - (double)((int)time);
+
         if(timeDecimals < 0.5)
         {
             canAttack = true;
@@ -161,16 +167,12 @@ public class Enemy {
 
             if (playerIntersect != null && (collisionVector == null ||
                     playerIntersect.sub(lineStart).length() < collisionVector.sub(lineStart).length())) {
+                Game.getLevel().damagePlayer(rand.nextInt(DAMAGE_MAX - DAMAGE_MIN));
                 System.out.println("Player shot ma nigga");
             }
 
-            if (collisionVector == null)
-                System.out.println("CLYDE SUCKS");
-            else
-                System.out.println("WE HIT SOMETHING(420???)");
-
-            state = CHASE;
             canAttack = false;
+            state = CHASE;
         }
     }
 
@@ -224,5 +226,13 @@ public class Enemy {
         Shader shader = Game.getLevel().getShader();
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(), material);
         mesh.draw();
+    }
+
+    public Transform getTransform(){
+        return transform;
+    }
+
+    public Vector2f getSize(){
+        return new Vector2f(WIDTH, LENGTH);
     }
 }

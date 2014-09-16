@@ -14,6 +14,7 @@ public class Game {
 
     private static Level level;
     private Player player;
+    private static boolean isRunning;
 
     public Game() {
         player = new Player(new Vector3f(5.5f, 0.4375f ,8.5f));
@@ -21,6 +22,7 @@ public class Game {
 
         Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
         Transform.setCamera(player.getCamera());
+        isRunning = true;
     }
 
     public void input(){
@@ -28,11 +30,17 @@ public class Game {
     }
 
     public void update(){
-        level.update();
+        if(isRunning)
+            level.update();
     }
 
     public void render(){
-        level.render();
+        if(isRunning)
+            level.render();
+    }
+
+    public static void setIsRunning(boolean value){
+        isRunning = value;
     }
 
     public static Level getLevel(){

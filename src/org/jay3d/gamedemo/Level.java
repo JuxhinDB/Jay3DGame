@@ -37,9 +37,8 @@ public class Level {
 
     private ArrayList<Vector2f> collisionPosStart;
     private ArrayList<Vector2f> collisionPosEnd;
+    private ArrayList<Enemy> enemies;
 
-    //WARNING: TEMPORARY VAR
-    private Enemy enemy;
     private ArrayList<Door> doors;
 
     public Level(String levelName, String textureName, Player player) {
@@ -49,18 +48,15 @@ public class Level {
         material = new Material(new Texture(textureName));
 
         //door = new Door(tempTransform, material);
-        doors = new ArrayList<>();
-        collisionPosStart = new ArrayList<>();
-        collisionPosEnd = new ArrayList<>();
         level = new Bitmap(levelName).flipY();
 
         shader = BasicShader.getInstance();
 
         transform = new Transform();
 
-        enemy = new Enemy(tempTransform);
-
         generateLevel();
+
+        enemies.add(new Enemy(tempTransform));
     }
 
     public void openDoors(Vector3f pos){
@@ -72,19 +68,17 @@ public class Level {
     }
 
     public void input() {
-        if(Input.getKeyDown(Input.KEY_E)) {
-            openDoors(player.getCamera().getPos());
-            enemy.damage(30);
-        }
-
         player.input();
     }
 
     public void update() {
         for(Door d : doors)
             d.update();
+
         player.update();
-        enemy.update();
+
+        for(Enemy e : enemies)
+            e.update();
     }
 
     public void render() {
@@ -92,10 +86,14 @@ public class Level {
         shader.updateUniforms(transform.getTransformation(), transform.getProjectedTransformation(),
                 material);
         mesh.draw();
+
         for(Door d : doors)
             d.render();
+
         player.render();
-        enemy.render();
+
+        for(Enemy e : enemies)
+            e.render();
     }
 
     private void addFace(ArrayList<Integer> indices, int startLocation, boolean direction) {
@@ -210,6 +208,11 @@ public class Level {
     }
 
     private void generateLevel() {
+        doors = new ArrayList<>();
+        enemies = new ArrayList<>();
+        collisionPosStart = new ArrayList<>();
+        collisionPosEnd = new ArrayList<>();
+
         ArrayList<Vertex> vertices = new ArrayList<>();
         ArrayList<Integer> indices = new ArrayList<>();
 
@@ -343,6 +346,31 @@ public class Level {
 
             findNearestVector2f(nearestIntersection, collisionVector, lineStart);
         }
+        if(hurtMonsters){
+            Vector2f nearestEnemyIntersect = null;
+            Enemy nearestEnemy = null;
+
+            for(Enemy e : enemies){
+                Vector2f enemySize = e.getSize();
+                Vector3f enemyPos3f = e.getTransform().getTranslation();
+                Vector2f enemyPos2f = new Vector2f(enemyPos3f.getX(), enemyPos3f.getZ());
+                Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd, enemyPos2f, enemySize);
+
+                nearestEnemyIntersect = findNearestVector2f(nearestEnemyIntersect, collisionVector, lineStart);
+
+                if(nearestEnemyIntersect == collisionVector)
+                    nearestEnemy = e;
+
+            }
+            if(nearestEnemyIntersect != null && (nearestIntersection == null ||
+                    nearestEnemyIntersect.sub(lineStart).length() < nearestIntersection.sub(lineStart).length()))
+            {
+                System.out.println("We've hit the monster!");
+                if(nearestEnemy != null)
+                    nearestEnemy.damage(player.getDamage());
+                    System.out.println("Player damage: " + player.getDamage());
+            }
+        }
 
         return nearestIntersection;
     }
@@ -395,6 +423,10 @@ public class Level {
         result = findNearestVector2f(result, collisionVector, lineStart);
 
         return result;
+    }
+
+    public void damagePlayer(int amount){
+        player.damage(amount);
     }
 
     public Shader getShader() {
