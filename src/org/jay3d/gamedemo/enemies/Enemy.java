@@ -9,7 +9,10 @@ import org.jay3d.engine.render.Vertex;
 import org.jay3d.engine.render.material.Material;
 import org.jay3d.engine.render.shaders.Shader;
 import org.jay3d.game.Game;
+import org.jay3d.gamedemo.Player;
 import org.jay3d.util.Time;
+
+import java.util.Random;
 
 /**
  * Created by Juxhin
@@ -33,23 +36,36 @@ public class Enemy {
     public static final float TEX_MAX_Y = 1 - OFFSET_Y;
 
     public static final int IDLE = 0;
-    public static final int CHASING = 1;
+    public static final int CHASE = 1;
     public static final int ATTACK = 2;
     public static final int DYING = 3;
     public static final int DEAD = 4;
 
     public static final float MOVE_SPEED = 1.0f;//TODO: Make value appropiate
-    public static final float MOVE_STOP_DIST = 0.5f;
+    public static final float MOVE_STOP_DIST = 2f;
     public static final float WIDTH = 0.2f;
     public static final float LENGTH = 0.2f;
+    public static final float SHOT_ANGLE = 10f;
+    public static final float ATTACK_CHANCE = 0.5f;
+    public static final int MAX_HEALTH = 100;
+    private boolean canLook;
+    private boolean canAttack;
+
+    private static final float SHOOT_DISTANCE = 1000.0f;
 
     private static Mesh mesh;
     private Material material;
     private Transform transform;
     private int state;
+    private int health;
+    private Random rand;
 
     public Enemy(Transform transform) {
-        this.state = CHASING;
+        this.rand = new Random();
+        this.canLook = false;
+        this.health = MAX_HEALTH;
+        this.canAttack = false;
+        this.state = IDLE;
         this.transform = transform;
         material = new Material(new Texture("enemy1.png"));
 
@@ -69,14 +85,46 @@ public class Enemy {
         }
     }
 
-    private void idleUpdate(Vector3f orientation, float distance){
+    public void damage(int amount){
+        if(state == IDLE)
+            state = CHASE;
 
+        health -= amount;
+
+        if(health <= 0)
+            state = DYING;
+    }
+
+    private void idleUpdate(Vector3f orientation, float distance)
+    {
+        double time = ((double)Time.getTime())/((double)Time.SECOND);
+        double timeDecimals = time - (double)((int)time);
+        if(timeDecimals < 0.5){
+            canLook = true;
+        }else if(canLook){
+            Vector2f lineStart = new Vector2f(transform.getTranslation().getX(), transform.getTranslation().getZ());
+            Vector2f castDirection = new Vector2f(orientation.getX(), orientation.getZ());
+            Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
+            Vector2f collisionVector = Game.getLevel().checkIntersection(lineStart, lineEnd, false);
+            Vector2f playerIntersectVector = Game.getLevel().lineIntersectRect(lineStart, lineEnd,
+                    new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ()),
+                    new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+            if(playerIntersectVector != null && (collisionVector == null ||
+                    playerIntersectVector.sub(lineStart).length() < collisionVector.sub(lineStart).length())){
+                System.out.println("We've seen the player!");
+                state = CHASE;
+            }
+            canLook = false;
+        }
     }
 
     private void chaseUpdate(Vector3f orientation, float distance){
+        if(rand.nextDouble() < ATTACK_CHANCE * Time.getDelta())
+            state = ATTACK;
+
         if(distance > MOVE_STOP_DIST) {
 
-            float movAmt = -MOVE_SPEED * (float) Time.getDelta();
+            float movAmt = MOVE_SPEED * (float) Time.getDelta();
 
             Vector3f oldPos = transform.getTranslation();
             Vector3f newPos = transform.getTranslation().add(orientation.mul(movAmt));
@@ -90,19 +138,48 @@ public class Enemy {
 
             if(movementVector.sub(orientation).length() != 0)
                 Game.getLevel().openDoors(transform.getTranslation());
-        }
+        }else
+            state = ATTACK;
     }
 
     private void attackUpdate(Vector3f orientation, float distance){
+        double time = ((double)Time.getTime())/((double)Time.SECOND);
+        double timeDecimals = time - (double)((int)time);
+        if(timeDecimals < 0.5)
+        {
+            canAttack = true;
+        }else if(canAttack){
+            Vector2f lineStart = new Vector2f(transform.getTranslation().getX(), transform.getTranslation().getZ());
+            Vector2f castDirection = new Vector2f(orientation.getX(), orientation.getZ()).rotate((rand.nextFloat() - 0.5f) * SHOT_ANGLE);
+            Vector2f lineEnd = lineStart.add(castDirection.mul(SHOOT_DISTANCE));
 
+            Vector2f collisionVector = Game.getLevel().checkIntersection(lineStart, lineEnd, false);
+
+            Vector2f playerIntersect = Game.getLevel().lineIntersectRect(lineStart, lineEnd,
+                    new Vector2f(Transform.getCamera().getPos().getX(), Transform.getCamera().getPos().getZ()),
+                    new Vector2f(Player.PLAYER_SIZE, Player.PLAYER_SIZE));
+
+            if (playerIntersect != null && (collisionVector == null ||
+                    playerIntersect.sub(lineStart).length() < collisionVector.sub(lineStart).length())) {
+                System.out.println("Player shot ma nigga");
+            }
+
+            if (collisionVector == null)
+                System.out.println("CLYDE SUCKS");
+            else
+                System.out.println("WE HIT SOMETHING(420???)");
+
+            state = CHASE;
+            canAttack = false;
+        }
     }
 
     private void dyingUpdate(Vector3f orientation, float distance){
-
+        state = DEAD;
     }
 
     private void deadUpdate(Vector3f orientation, float distance){
-
+        System.out.println("Dead ma nigga");
     }
 
     private void alignWithGround(){
@@ -121,7 +198,7 @@ public class Enemy {
     }
 
     public void update() {
-        Vector3f dirToCam = transform.getTranslation().sub(Transform.getCamera().getPos());
+        Vector3f dirToCam = Transform.getCamera().getPos().sub(transform.getTranslation());
 
         float distance = dirToCam.length();
         Vector3f orientation = dirToCam.div(distance);
@@ -132,7 +209,7 @@ public class Enemy {
         switch(state){
             case IDLE: idleUpdate(orientation, distance);
                 break;
-            case CHASING: chaseUpdate(orientation, distance);
+            case CHASE: chaseUpdate(orientation, distance);
                 break;
             case ATTACK: attackUpdate(orientation, distance);
                 break;

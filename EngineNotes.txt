@@ -28,3 +28,5 @@ TOP-LEVEL:
 24. Give vectors an interpolation method
 25. Transparency support
 26. Sprite support
+27. Good way to compare vectors
+28. Vector2f crossproduct method

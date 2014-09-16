@@ -15,7 +15,7 @@ import org.jay3d.util.Time;
 public class Player {
     private static final float MOUSE_SENSITIVITY = 0.125f;
     private static final float MOVE_SPEED = 5f;
-    private static final float PLAYER_SIZE = 0.15f;
+    public static final float PLAYER_SIZE = 0.15f;
     private static final Vector3f ZERO_VECTOR = new Vector3f(0, 0, 0);
 
     private Camera camera;

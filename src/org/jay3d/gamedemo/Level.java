@@ -35,6 +35,8 @@ public class Level {
     private Transform transform;
     private Player player;
 
+    private ArrayList<Vector2f> collisionPosStart;
+    private ArrayList<Vector2f> collisionPosEnd;
 
     //WARNING: TEMPORARY VAR
     private Enemy enemy;
@@ -43,11 +45,13 @@ public class Level {
     public Level(String levelName, String textureName, Player player) {
         this.player = player;
         Transform tempTransform = new Transform();
-        tempTransform.setTranslation(new Vector3f(6f, 0 ,8.5f));
+        tempTransform.setTranslation(new Vector3f(9.5f, 0 ,11.5f));
         material = new Material(new Texture(textureName));
 
         //door = new Door(tempTransform, material);
         doors = new ArrayList<>();
+        collisionPosStart = new ArrayList<>();
+        collisionPosEnd = new ArrayList<>();
         level = new Bitmap(levelName).flipY();
 
         shader = BasicShader.getInstance();
@@ -68,8 +72,10 @@ public class Level {
     }
 
     public void input() {
-        if(Input.getKeyDown(Input.KEY_E))
-           openDoors(player.getCamera().getPos());
+        if(Input.getKeyDown(Input.KEY_E)) {
+            openDoors(player.getCamera().getPos());
+            enemy.damage(30);
+        }
 
         player.input();
     }
@@ -229,18 +235,26 @@ public class Level {
 
 
                 if((level.getPixel(i, j - 1) & 0xFFFFFF) == 0) {
+                    collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, j * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f((i + 1) * SPOT_WIDTH, j * SPOT_LENGTH));
                     addFace(indices, vertices.size(), false);
                     addVertices(vertices, i, 0, j, true, false, true, texCoords);
                 }
                 if((level.getPixel(i, j + 1) & 0xFFFFFF) == 0) {
+                    collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f((i + 1) * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
                     addFace(indices, vertices.size(), true);
                     addVertices(vertices, i, 0, (j + 1), true, false, true, texCoords);
                 }
                 if((level.getPixel(i - 1, j) & 0xFFFFFF) == 0) {
+                    collisionPosStart.add(new Vector2f(i * SPOT_WIDTH, j * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f(i * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
                     addFace(indices, vertices.size(), true);
                     addVertices(vertices, 0, j, i, true, true, false, texCoords);
                 }
                 if((level.getPixel(i + 1, j) & 0xFFFFFF) == 0) {
+                    collisionPosStart.add(new Vector2f((i + 1) * SPOT_WIDTH, j * SPOT_LENGTH));
+                    collisionPosEnd.add(new Vector2f((i + 1)  * SPOT_WIDTH, (j + 1) * SPOT_LENGTH));
                     addFace(indices, vertices.size(), false);
                     addVertices(vertices, 0, j, (i + 1), true, true, false, texCoords);
                 }
@@ -310,6 +324,77 @@ public class Level {
         }
 
         return res;
+    }
+
+    public Vector2f checkIntersection(Vector2f lineStart, Vector2f lineEnd, boolean hurtMonsters){
+        Vector2f nearestIntersection = null;
+
+        for(int i = 0; i < collisionPosStart.size(); i++){
+            Vector2f collisionVector = lineIntersect(lineStart, lineEnd, collisionPosStart.get(i), collisionPosEnd.get(i));
+
+            nearestIntersection = findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+        }
+
+        for(Door d : doors){
+            Vector2f doorSize = d.getDoorSize();
+            Vector3f doorPos3f = d.getTransform().getTranslation();
+            Vector2f doorPos2f = new Vector2f(doorPos3f.getX(), doorPos3f.getZ());
+            Vector2f collisionVector = lineIntersectRect(lineStart, lineEnd, doorPos2f, doorSize);
+
+            findNearestVector2f(nearestIntersection, collisionVector, lineStart);
+        }
+
+        return nearestIntersection;
+    }
+
+    private float cross(Vector2f a, Vector2f b){
+        return a.getX() * b.getY() - a.getY() * b.getX();
+    }
+
+    private Vector2f lineIntersect(Vector2f lineStart1, Vector2f lineEnd1, Vector2f lineStart2, Vector2f lineEnd2)
+    {
+        Vector2f line1 = lineEnd1.sub(lineStart1);
+        Vector2f line2 = lineEnd2.sub(lineStart2);
+
+        float cross = cross(line1, line2);
+        if(cross == 0)
+            return null;
+
+        Vector2f distanceBetweenLineStarts = lineStart2.sub(lineStart1);
+
+        float a = cross(distanceBetweenLineStarts, line2) / cross;
+        float b = cross(distanceBetweenLineStarts, line1) / cross;
+
+        if(0.0f < a && a < 1.0f && 0.0f < b && b < 1.0f)
+            return lineStart1.add(line1.mul(a));
+
+        return null;
+    }
+
+    private Vector2f findNearestVector2f(Vector2f a, Vector2f b, Vector2f relativePos){
+        if(b != null &&  (a == null ||
+                a.sub(relativePos).length() > b.sub(relativePos).length()))
+            return b;
+
+        return a;
+    }
+
+    public Vector2f lineIntersectRect(Vector2f lineStart, Vector2f lineEnd, Vector2f rectPos, Vector2f rectSize)
+    {
+        Vector2f result = null;
+        Vector2f collisionVector = lineIntersect(lineStart, lineEnd, rectPos, new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY()));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        collisionVector = lineIntersect(lineStart, lineEnd, rectPos, new Vector2f(rectPos.getX(), rectPos.getY() + rectSize.getY()));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX(), rectPos.getY() + rectSize.getY()), rectPos.add(rectSize));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        collisionVector = lineIntersect(lineStart, lineEnd, new Vector2f(rectPos.getX() + rectSize.getX(), rectPos.getY()), rectPos.add(rectSize));
+        result = findNearestVector2f(result, collisionVector, lineStart);
+
+        return result;
     }
 
     public Shader getShader() {
