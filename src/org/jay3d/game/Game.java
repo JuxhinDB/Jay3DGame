@@ -13,16 +13,11 @@ import org.jay3d.gamedemo.Player;
 public class Game {
 
     private static Level level;
-    private Player player;
     private static boolean isRunning;
+    private static int currentLevel = 0;
 
     public Game() {
-        player = new Player(new Vector3f(5.5f, 0.4375f ,8.5f));
-        level = new Level("level1.png", "wolfpack.png", player);
-
-        Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
-        Transform.setCamera(player.getCamera());
-        isRunning = true;
+        loadNextLevel();
     }
 
     public void input(){
@@ -45,5 +40,14 @@ public class Game {
 
     public static Level getLevel(){
         return level;
+    }
+
+    public static void loadNextLevel(){
+        currentLevel++;
+        level = new Level("level" + currentLevel + ".png", "wolfpack.png");
+
+        Transform.setProjection(70, Window.getWidth(), Window.getHeight(), 0.01f, 1000f);
+        Transform.setCamera(level.getPlayer().getCamera());
+        isRunning = true;
     }
 }
